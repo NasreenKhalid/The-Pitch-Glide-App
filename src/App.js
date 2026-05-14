@@ -1,95 +1,156 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Quick Styles for our "Glassmorphism" look
 const styles = {
-  card: "bg-white bg-opacity-10 backdrop-blur-lg border border-white border-opacity-20 rounded-3xl p-8 shadow-2xl",
-  button: "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-8 rounded-full transition-all transform hover:scale-105 shadow-lg"
+  // Much darker, textured base to remove the "white space" feel
+  container: "min-h-screen bg-[#CBD5D1] text-slate-800 font-sans overflow-hidden flex flex-col items-center justify-center p-6 relative",
+  card: "bg-white/80 backdrop-blur-3xl border border-white/50 rounded-[3rem] p-12 shadow-[0_30px_100px_rgba(0,0,0,0.1)]",
+  input: "w-full bg-white/50 p-5 rounded-2xl border-2 border-slate-200 outline-none focus:border-emerald-600 transition-all text-slate-800 mb-2 font-medium placeholder:text-slate-400",
+  goldBtn: "w-full bg-gradient-to-r from-[#D4AF37] to-[#AA8B2E] hover:brightness-110 active:scale-95 text-white font-black py-5 px-12 rounded-2xl transition-all shadow-2xl shadow-amber-900/20 uppercase tracking-[0.2em] text-xs mt-4 cursor-pointer"
 };
 
 export default function PitchGlide() {
-  const [productName, setProductName] = useState("Aero Headphones");
-  const [price, setPrice] = useState("199");
+  const [step, setStep] = useState('editor'); 
+  const [plan, setPlan] = useState('free');
+  const [productData, setProductData] = useState({ name: "", desc: "" });
+  const [error, setError] = useState("");
+  
+  const [index, setIndex] = useState(0);
+  const [subIndex, setSubIndex] = useState(0);
+  const [reverse, setReverse] = useState(false);
+  const phrases = ["Launch your brand.", "Hook influencers.", "Close more deals."];
+
+  useEffect(() => {
+    if (subIndex === phrases[index].length + 1 && !reverse) {
+      const timeout = setTimeout(() => setReverse(true), 1500);
+      return () => clearTimeout(timeout);
+    }
+    if (subIndex === 0 && reverse) {
+      setReverse(false);
+      setIndex((prev) => (prev + 1) % phrases.length);
+      return;
+    }
+    const timeout = setTimeout(() => {
+      setSubIndex((prev) => prev + (reverse ? -1 : 1));
+    }, reverse ? 40 : 80);
+    return () => clearTimeout(timeout);
+  }, [subIndex, index, reverse, phrases]);
+
+  const handleGenerate = () => {
+    if(!productData.name.trim()) return setError("Please enter your product name.");
+    if(!productData.desc.trim()) return setError("A short description is required.");
+    setError("");
+    setStep('success');
+  };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white font-sans overflow-hidden flex flex-col items-center justify-center p-4">
+    <div className={styles.container}>
       
-      {/* BACKGROUND DECORATION (Sliding Circles) */}
-      <motion.div 
-        animate={{ x: [0, 100, 0], y: [0, 50, 0] }}
-        transition={{ duration: 20, repeat: Infinity }}
-        className="absolute top-20 left-10 w-64 h-64 bg-purple-600 rounded-full blur-[120px] opacity-30"
-      />
-
-      {/* MAIN ANIMATED STAGE */}
-      <main className="relative z-10 w-full max-w-4xl grid md:grid-cols-2 gap-12 items-center">
-        
-        {/* LEFT SIDE: FLYING PRODUCT IMAGE */}
-        <motion.div
-          initial={{ x: -500, opacity: 0, rotate: -20 }}
-          animate={{ x: 0, opacity: 1, rotate: 0 }}
-          transition={{ type: "spring", damping: 12, stiffness: 100 }}
-          className="relative"
-        >
-          <div className="w-full h-80 bg-gradient-to-tr from-purple-400 to-blue-500 rounded-2xl shadow-inner flex items-center justify-center overflow-hidden">
-             {/* Replace with your product image URL */}
-             <motion.img 
-              animate={{ y: [0, -20, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              src="https://via.placeholder.com/300" 
-              alt="Product" 
-              className="w-2/3 drop-shadow-2xl"
-             />
-          </div>
-          {/* SLIDING PRICE TAG */}
-          <motion.div 
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="absolute -bottom-5 -right-5 bg-pink-500 p-4 rounded-xl shadow-xl rotate-12"
-          >
-            <span className="text-2xl font-bold">${price}</span>
-          </motion.div>
-        </motion.div>
-
-        {/* RIGHT SIDE: SLIDING CONTENT */}
+      {/* BACKGROUND DEPTH (Fixes the "White Space" issue) */}
+      <div className="absolute inset-0 pointer-events-none">
         <motion.div 
-          initial={{ x: 500, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ type: "spring", delay: 0.2 }}
-          className={styles.card}
-        >
-          <h1 className="text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
-            {productName}
-          </h1>
-          <p className="text-gray-300 mb-8 text-lg">
-            Stop sending boring emails. Send a visual experience that converts influencers in seconds.
-          </p>
+          animate={{ x: [-100, 100, -100], y: [-50, 50, -50], scale: [1, 1.2, 1] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -top-[10%] -left-[10%] w-[60%] h-[60%] bg-emerald-200/50 rounded-full blur-[120px]" 
+        />
+        <motion.div 
+          animate={{ x: [100, -100, 100], y: [50, -50, 50], scale: [1.2, 1, 1.2] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -bottom-[10%] -right-[10%] w-[60%] h-[60%] bg-amber-200/40 rounded-full blur-[120px]" 
+        />
+      </div>
+
+      {/* HEADER */}
+      <nav className="absolute top-12 left-12 flex items-center gap-4 z-50">
+        <div className="w-10 h-10 bg-slate-900 rounded-2xl flex items-center justify-center shadow-2xl">
+          <div className="w-4 h-4 bg-emerald-400 rounded-full animate-pulse" />
+        </div>
+        <span className="font-black text-3xl tracking-tighter text-slate-900">PitchGlide</span>
+      </nav>
+
+      <main className="relative z-10 w-full max-w-7xl grid lg:grid-cols-2 gap-10 items-center">
+        
+        {/* IMAGE STAGE */}
+        <div className="relative flex items-center justify-center">
+          {/* Animated Orbiting Ring */}
+          <motion.div 
+            animate={{ rotate: 360 }}
+            transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+            className="absolute w-[500px] h-[500px] border-2 border-dashed border-white/40 rounded-full" 
+          />
           
-          <div className="space-y-4">
-             <input 
-              type="text" 
-              placeholder="Product Name" 
-              className="w-full bg-white bg-opacity-5 p-4 rounded-xl border border-white border-opacity-10 outline-none focus:border-purple-500 transition-all"
-              onChange={(e) => setProductName(e.target.value)}
+          <motion.div 
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="relative w-[380px] h-[380px] rounded-full overflow-hidden shadow-[0_60px_100px_-20px_rgba(0,0,0,0.2)] border-[12px] border-white z-20"
+          >
+             <motion.img 
+              animate={{ y: [0, -20, 0] }} 
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+              src="https://images.unsplash.com/photo-1616410011236-7a42121dd981?w=800" 
+              className="w-full h-full object-cover" 
              />
-             <button className={styles.button}>
-               Publish & Go Live ($5)
-             </button>
-          </div>
-        </motion.div>
+          </motion.div>
+          
+          <div className="absolute top-10 left-0 bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl text-xs font-bold z-30">✨ 3D RENDERED</div>
+          <div className="absolute bottom-10 right-0 bg-white text-slate-900 px-6 py-3 rounded-2xl shadow-2xl text-xs font-bold z-30">🚀 FAST DEPLOY</div>
+        </div>
+
+        {/* INTERFACE */}
+        <AnimatePresence mode="wait">
+          {step === 'editor' ? (
+            <motion.div key="editor" initial={{ x: 50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className={styles.card}>
+              <h1 className="text-5xl font-black mb-8 leading-tight text-slate-900">
+                The tool to <br/>
+                <span className="text-emerald-600 underline decoration-amber-400 decoration-4 underline-offset-8">
+                  {phrases[index].substring(0, subIndex)}
+                </span>
+              </h1>
+              
+              <div className="flex gap-2 mb-8 bg-slate-200/50 p-1.5 rounded-2xl">
+                <button onClick={() => setPlan('free')} className={`flex-1 py-3 rounded-xl text-[10px] font-black transition-all ${plan === 'free' ? 'bg-white shadow-lg text-emerald-600' : 'text-slate-500'}`}>FREE VERSION</button>
+                <button onClick={() => setPlan('pro')} className={`flex-1 py-3 rounded-xl text-[10px] font-black transition-all ${plan === 'pro' ? 'bg-white shadow-lg text-amber-600' : 'text-slate-500'}`}>PRO ($5)</button>
+              </div>
+
+              {error && <p className="text-red-500 text-[11px] font-bold mb-4 flex items-center gap-2"><span>×</span> {error}</p>}
+
+              <input type="text" placeholder="Product Name" className={styles.input} onChange={(e) => setProductData({...productData, name: e.target.value})} />
+              <textarea placeholder="Describe your product's main benefit..." className={`${styles.input} h-32 resize-none`} onChange={(e) => setProductData({...productData, desc: e.target.value})} />
+              <button onClick={handleGenerate} className={styles.goldBtn}>Build My Pitch</button>
+            </motion.div>
+          ) : (
+            <motion.div key="success" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className={styles.card}>
+              <div className="text-center">
+                <div className="w-20 h-20 bg-emerald-500 text-white rounded-3xl flex items-center justify-center mx-auto mb-8 text-3xl shadow-2xl rotate-3">✓</div>
+                <h2 className="text-4xl font-black mb-2 tracking-tighter">SUCCESS!</h2>
+                <p className="text-slate-500 font-medium mb-10">Your unique pitch link is ready for influencers.</p>
+                
+                <div className="bg-slate-900 text-emerald-400 p-6 rounded-2xl mb-8 font-mono text-xs break-all border-b-4 border-emerald-500 shadow-inner">
+                  pitchglide.io/v/{productData.name.toLowerCase().replace(/\s+/g, '-')}
+                </div>
+
+                <div className="space-y-4">
+                  <button className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black transition-all shadow-2xl">Copy Link & Preview</button>
+                  <button onClick={() => setStep('editor')} className="text-slate-600 text-[11px] font-bold uppercase tracking-widest border-b-2 border-transparent hover:border-slate-400 transition-all">Go Back & Edit</button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
-      {/* FOOTER ICONS SLIDING IN */}
-      <motion.footer 
-        initial={{ y: 100 }}
-        animate={{ y: 0 }}
-        className="mt-20 flex space-x-12 opacity-50"
-      >
-        <span>✦ FAST SHIPPING</span>
-        <span>✦ ECO-FRIENDLY</span>
-        <span>✦ 24/7 SUPPORT</span>
-      </motion.footer>
+      {/* REFINED FOOTER */}
+      <footer className="absolute bottom-10 w-full max-w-7xl flex justify-between items-center px-12 text-[11px] font-black text-slate-800 uppercase tracking-[0.3em] opacity-80">
+        <div className="flex gap-10">
+          <span className="hover:text-emerald-600 cursor-pointer transition-colors">Terms</span>
+          <span className="hover:text-emerald-600 cursor-pointer transition-colors">Legal</span>
+        </div>
+        <span>© 2026 PitchGlide System</span>
+        <div className="flex gap-10">
+          <span className="hover:text-amber-600 cursor-pointer transition-colors">Contact</span>
+          <span className="hover:text-amber-600 cursor-pointer transition-colors">Support</span>
+        </div>
+      </footer>
     </div>
   );
 }
